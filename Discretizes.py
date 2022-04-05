@@ -1,4 +1,4 @@
-
+"""discretizes the observation for flappy bird"""
 import numpy as np
 from skimage import color
 
