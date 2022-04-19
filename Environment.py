@@ -3,6 +3,7 @@ import flappy_bird_gym
 env = flappy_bird_gym.make("FlappyBird-rgb-v0")
 
 obs = env.reset()
+print(obs)
 
 """
 while True:
