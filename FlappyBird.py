@@ -13,15 +13,15 @@ import flappy_bird_gym
 
 
 q_table = dict()
-learningRate = 0.4
+learningRate = 0.1
 gamma = 0.95
-epsilon_initial = 0.001
-epsilon_min = 0.0001
+epsilon_initial = 0.1
+epsilon_min = 0.01
 render = 500
 
 num_episodes = 200000
 reward_history = []
-epsilon_step_size = 0.01/num_episodes
+epsilon_step_size = 1/num_episodes
 score_history = []
 
 env = flappy_bird_gym.make("FlappyBird-v0")
@@ -33,7 +33,7 @@ def factory():
 q_function = defaultdict(factory)
 
 def descretize(obs):
-    new_obs = [round(obs[0], 1), round(obs[1], 1)]
+    new_obs = [round(obs[0], 2), round(obs[1], 2)]
 
     return tuple(new_obs)
 
@@ -61,10 +61,14 @@ for i in range(num_episodes):
                 action = env.action_space.sample()
             
             else:
+                print(q_function[state])
                 action = np.argmax(q_function[state])
         
         next_state, reward, done, _ = env.step(action)
+        if (abs(next_state[1])>0.1):
+            reward += -10000
         next_state = descretize(next_state)
+
 
 
         epsilon = update_epsilon(epsilon)
@@ -76,6 +80,7 @@ for i in range(num_episodes):
         score += reward
         if (i%render == 0):
             env.render()
+            time.sleep(1 / 30)  # FPS
     
     reward_history.append(score)
     
