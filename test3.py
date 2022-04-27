@@ -1,4 +1,5 @@
 
+import time
 import flappy_bird_gym
 from collections import deque
 import torch
@@ -13,7 +14,12 @@ env.reset()
 state = env.reset()
 rbuf = deque(maxlen=1000)
 gamma = 0.98
+epsilon_initial = 0.0027353
+epsilon_min = 0.0001
+epsilon_step_size = 0.00001
 
+def update_epsilon(epsilon):
+    return(max(epsilon_min, min(epsilon_initial, epsilon - epsilon_step_size)))
 
 
 
@@ -55,19 +61,40 @@ def train_network():
         optimizer.step()
 
 i = 0
-while True:
-    prev_state = state
-    action = qnet(state).max(0)[1].numpy() if random.uniform(0,1)>0.5 else env.action_space.sample()
-    
-    state , reward, done, info = env.step(action)
-    
-    rbuf.append((prev_state, state, action, reward))
-    env.render()
-    if len(rbuf)>16 and i%100==0:
-        train_network()
-    
-    if done:
-        state = env.reset()
+epsilon = epsilon_initial
+done = False
 
-    print(len(rbuf))
-    i += 1
+while (i<10000):
+    
+    state = env.reset()
+    i+=1
+    done = False
+    epsilon = update_epsilon(epsilon)
+
+    while not done:
+        prev_state = state
+        action = qnet(state).max(0)[1].numpy() if random.uniform(0,1)>epsilon else env.action_space.sample()
+        
+        state , reward, done, info = env.step(action)
+        
+        
+        
+        if (abs(state[1])>0.1):
+            reward -= 10
+        reward +=5
+        
+        rbuf.append((prev_state, state, action, reward))
+        
+        if len(rbuf)>16 and i%100==0:
+            train_network()
+        if i%100==0:
+            env.render()
+            print(state)
+            time.sleep(1/60) 
+
+        
+        if done:
+            state = env.reset()
+
+        
+    
